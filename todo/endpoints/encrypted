@@ -1,0 +1,47 @@
+Notefish authentication is done with username and password. The password is
+hashed on both the server-side and the client-side to aid the security of users
+who reuse their passwords. The salt is a function of your user id.
+
+On authentication success, the client is granted an authentication token. This
+token will expire after X hours, or never if requested. Active tokens are
+visible in the client via the /api/auth/tokens endpoint, and can be deleted
+by any active token.
+
+GET /api/auth/:token                -> {"ok", "token_valid"} | {"ok", "token_expired"}
+PUT /api/auth <username> <password> -> {"ok", "<token>"} | {"error", "bad_details"}
+GET /api/auth/tokens <token>        -> {"ok", ["<token1>", "<token2>", ...]} | {"error", "bad_token"}
+DELETE /api/auth/:token <token>     -> {"ok", "logged_out"}
+
+Notes in Notefish are encrypted by the master key by default. 
+
+GET /api/note/:id <token>           -> {"ok", %Note{...}} | {"error", "not_found"}
+GET /api/note/query/:query <token>  -> {"ok", [%Note{...}, %Note{...}, ...] | {"ok", []}
+PUT /api/note <note> <token>        -> {"ok", %Note{...}} | {"error", "bad_note"}
+DELETE /api/note/:id <token>        -> {"ok", "note_deleted"} | {"error", "not_found"}
+
+This endpoint returns the master key for the user, which is encrypted with the
+user's plaintext password. The server never sees this password, so it is
+impossible for the server to decrypt the master key.
+
+GET /api/key <token>                -> {"ok", "<encrypted_key>"} | {"error", "bad_token"}
+
+This endpoint returns the global dictionary for the user. Every time a Note is
+saved, new words are assigned a random, unique identifier and mapped in the
+global dictionary. Then the Note's title and contents are iterated to generate
+a content_index, which is persisted (unencrypted) in the Note metadata. This
+allows for a rudimentary search of the Note database, which can be further
+refined in real-time as Notes returned in a query are client-side decrypted.
+And because the global dictionary is encrypted, if someone were to try to use
+the content_index to decrypt the Note database, it would only allow an attacker
+to see which notes contain the same words, and perhaps perform a frequency
+analysis. This is an acceptable tradeoff which is unlikely to grant the
+attacker much assistance.
+
+With this in mind, a Note query looks like so:
+
+SELECT * FROM notes WHERE ARRAY[w1, w2, w3] && notes.content_index;
+
+where w1,w2,w3 are words in the query that are present in the global dictionary.
+
+GET /api/dictionary <token>                         -> {"ok", "<encrypted_dictionary>"} 
+PUT /api/dictionary <encrypted_dictionary> <token>  -> {"ok", "updated"}

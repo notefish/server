@@ -1,0 +1,3 @@
+[submodule "priv/client"]
+	path = priv/client
+	url = git@github.com:notefish/client.git

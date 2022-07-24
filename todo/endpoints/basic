@@ -1,0 +1,75 @@
+Notefish authentication is done with username and password. The password is
+hashed on both the server-side and the client-side to aid the security of users
+who reuse their passwords. The salt is a function of your user id.
+
+On authentication success, the client is granted an authentication token. This
+token will expire after X hours, or never if requested. Active tokens are
+visible in the client via the /api/auth/tokens endpoint, and can be deleted by
+any active token.
+
+GET /api/v1/auth/:token                -> {"ok", "token_valid"}
+PUT /api/v1/auth                       -> {"ok", "<token>"}
+  :username (optional)              ; will try as both username & email
+  :password                         
+PUT /api/v1/auth/reset                 -> {"ok", "email_sent"}
+  :username                         ; will try as both username & email
+GET /api/v1/auth/tokens                -> {"ok", ["<token1>", "<token2>", ...]}
+  :token                           
+DELETE /api/v1/auth/:token             -> {"ok", "logged_out"}
+  :token                            
+
+Requests to endpoints listed further in this document implicitly require a
+valid authentication token.
+
+GET /api/v1/note/:id                   -> {"ok", %Note{...}}
+# :id is used when updating an existing note
+# in that case, unmodified fields can be omitted
+PUT /api/v1/note                       -> {"ok", %Note{...}} 
+  :id (optional)
+  :title
+  :body
+  :tags                                 ; unique list of lowercase strings
+  :fields                               ; indexed map of string to string value
+  :archived, default: false             ; [true, false]
+DELETE /api/v1/note/:id                -> {"ok", "deleted"} 
+
+# %Note{} objects given are partials, body is truncated to maximum length
+GET /api/v1/note/list                  -> {"ok", [%Note{...}, %Note{...}, ...]
+  :preview, default: long               ; [short, long]
+  :query, default: ""
+  :folder, default: ""
+  :tags, default: []                    ; must have this tag
+  :fields, default: {}                  ; must have this field, key => value
+  :author, default: <you>               ; [:any, <username>]
+  :sort, default: edited                ; [edited, created]
+  :archives, default: false             ; [true, false]
+
+# Bulk operations, available when multiple Notes are selected
+# :archived, :folder, :tags and :fields are mutually exclusive
+# and :action determines if a property is added or removed.
+PUT /api/v1/note/bulk                   -> {"ok", %{"rows_changed" => x}} 
+  :delete, default: false               ; [true, false]
+  :archived (optional)                  ; [true, false]
+  :action (optional)                    ; [add, remove]
+  :folder (optional)
+  :tags (optional)
+  :fields (optional)
+
+# Return all folders for current user
+GET /api/v1/folders                     -> {"ok", [%Folder{"name" => "some name", "children" => [...]}, ...]}
+# Get Notes in a given folder
+GET /api/v1/folders/:a/:b/:c            -> {"ok", [%Note{...}, %Note{...}, ...]}
+# Create folder :c in :b
+PUT /api/v1/folders/:a/:b/:c            -> {"ok", "created"}
+# Delete folder :c in :b
+DELETE /api/v1/folder/:a/:b/:c          -> {"ok", "deleted"}
+
+# Return all known tags for user
+# intended for auto completion
+GET /api/v1/tags                        -> {"ok", ["tag1, "tag2", ...]}
+DELETE /api/v1/tags/:tag                -> {"ok", "deleted"}
+
+# Return all known field keys for user
+# intended for auto completion
+GET /api/v1/fields                      -> {"ok", ["key1, "key2", ...]}
+DELETE /api/v1/fields/:key              -> {"ok", "deleted"}
