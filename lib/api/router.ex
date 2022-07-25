@@ -5,9 +5,8 @@ defmodule Notefish.ApiRouter do
 
   plug(:dispatch)
 
-  get "/hello" do
-    send_resp(conn, 200, "world")
-  end
+  # All further matches require authentication
+  plug(Notefish.Auth.Plug)
 
   match _ do 
     send_resp(conn, 500, "unknown method")

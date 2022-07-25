@@ -5,15 +5,15 @@ defmodule Notefish.Router do
 
   plug(:match)
 
-  plug(Plug.Parsers,
-    parsers: [:json],
-    pass: ["application/json"],
-    json_decoder: Jason
-  )
+  plug Plug.Parsers,
+       parsers: [:urlencoded, :json],
+       json_decoder: Jason
 
   plug(:dispatch)
 
-  forward "/api", to: Notefish.ApiRouter
+  forward "/auth", to: Notefish.Auth.Router
+
+  forward "/api/v1", to: Notefish.ApiRouter
 
   forward "/", to: Notefish.Static
 end

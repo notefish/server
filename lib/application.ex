@@ -6,6 +6,7 @@ defmodule Notefish.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Notefish.Repo,
       {Plug.Cowboy, scheme: :http, plug: Notefish.Router, options: [port: 3000]}
     ]
 
