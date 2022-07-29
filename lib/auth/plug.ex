@@ -3,6 +3,7 @@ defmodule Notefish.Auth.Plug do
   import Ecto.Query
 
   import Notefish.Auth
+  import Notefish.Helper
 
   def init(opts) do
     opts
@@ -13,7 +14,10 @@ defmodule Notefish.Auth.Plug do
       conn
       |> assign(:user_id, user_id)
     else
-      _ -> conn |> halt()
+      {:error, reason} ->
+        conn 
+        |> send_json(401, {:error, reason})
+        |> halt()
     end
   end
 end

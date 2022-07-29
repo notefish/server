@@ -99,10 +99,19 @@ defmodule Notefish.Auth.Router do
     :username - May be a username or email address.
   """
   match "/reset", via: [:put, :post] do
-    # TODO
+    send_json(conn, 501, {:error, "not_implemented"})
+  end
+
+  @doc """
+  Resets the password of a User, if given a valid reset :code.
+
+    :password - New password (client-side hashed.)
+  """
+  match "/reset/:code", via: [:put, :post] do
+    send_json(conn, 501, {:error, "not_implemented"})
   end
 
   match _ do 
-    send_resp(conn, 500, "unknown method")
+    send_json(conn, 500, {:error, "unknown_method"})
   end
 end
