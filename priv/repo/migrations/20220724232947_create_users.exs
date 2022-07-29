@@ -17,8 +17,8 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
       add :user_id, references(:users)
       add :token, :text, null: false
       add :device_name, :text, null: false
-      add :expires, :boolean, default: false
 
+      add :expires_at, :naive_datetime, null: false
       add :created_at, :naive_datetime, default: fragment("current_date")
     end
 

@@ -9,12 +9,11 @@ defmodule Notefish.Auth.Plug do
   end
 
   def call(conn, _opts) do
-    if not conn_authorized?(conn) do
+    with {:ok, user_id} <- verify_connection(conn) do
       conn
-      |> halt()
+      |> assign(:user_id, user_id)
     else
-      # authorized
-      conn
+      _ -> conn |> halt()
     end
   end
 end

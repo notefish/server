@@ -30,7 +30,7 @@ defmodule Server.MixProject do
       {:postgrex, "~> 0.16.0"},
       {:ecto, "~> 3.8.4"},
       {:ecto_sql, "~> 3.8.3"},
-      {:bcrypt_elixir, "~> 3.0.1"}
+      {:bcrypt_elixir, "~> 3.0.1"},
     ]
   end
 end

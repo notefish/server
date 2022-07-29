@@ -24,7 +24,16 @@ defmodule AuthTest do
       conn(:get, "/")
       |> Notefish.Auth.Router.call(%{})
 
-    assert Jason.decode!(conn.resp_body) == ["error", "token_invalid"]
+    assert Jason.decode!(conn.resp_body) == ["error", "token_not_present"]
+  end
+
+  test "/: (verify) fails with fake token" do
+    conn =
+      conn(:get, "/")
+      |> put_req_header("authorization", "Bearer fake")
+      |> Notefish.Auth.Router.call(%{})
+
+    assert Jason.decode!(conn.resp_body) == ["error", "token_expired"]
   end
 
   test "/register: fails with bad body" do

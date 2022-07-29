@@ -7,16 +7,16 @@ defmodule Token do
 
   schema "auth_tokens" do
     field :user_id, :integer
-    field :token, :string
-    field :device_name, :string
-    field :expires, :boolean
+    field :token
+    field :device_name
 
+    field :expires_at, :naive_datetime
     field :created_at, :naive_datetime
   end
 
   def changeset(token, params \\ %{}) do
     token
-    |> cast(params, [:user_id, :token, :device_name, :expires])
-    |> validate_required([:user_id, :token, :device_name])
+    |> cast(params, [:user_id, :token, :device_name, :expires_at])
+    |> validate_required([:user_id, :token, :device_name, :expires_at])
   end
 end

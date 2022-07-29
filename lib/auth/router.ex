@@ -14,10 +14,13 @@ defmodule Notefish.Auth.Router do
   Verifies that the given token is still valid.
   """
   get "/" do
-    valid = Notefish.Auth.conn_authorized?(conn)
-    case valid do
-      true  -> send_json(conn, 200, {:ok,    "token_valid"})
-      false -> send_json(conn, 400, {:error, "token_invalid"}) 
+    case Notefish.Auth.verify_connection(conn) do
+      {:ok, user_id} ->
+        send_json(conn, 200, {:ok, "token_valid"})
+      {:error, :token_not_present} ->
+        send_json(conn, 400, {:error, "token_not_present"}) 
+      {:error, _} ->
+        send_json(conn, 400, {:error, "token_expired"})
     end
   end
 
