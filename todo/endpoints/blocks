@@ -7,80 +7,86 @@ token will expire after X hours, or never if requested. Active tokens are
 visible in the client via the /auth/tokens endpoint, and can be deleted by
 any active token.
 
-PUT /auth/login              -> {"ok", "<token>"}
-  :username                         ; will try as both username & email
-  :password                         
-  :device_name
-PUT /auth/register           -> {"ok", "<token>"}
-  :email
-  :username
-  :password
-PUT /auth/reset              -> {"ok", "email_sent"}
-  :username                         ; will try as both username & email
+[ ] - not yet implemented 
+[x] - implemented
 
+# checks token in 'authorization' header
+[x] GET /auth                           -> ["ok", "token_valid"]
+[x] PUT /auth/login                     -> ["ok", "token_granted", "<token>"]
+      :login                            ; will try as both username & email
+      :password                                
+      :device_name
+[x] PUT /auth/register                  -> ["ok", "token_granted", "<token>"]
+      :email
+      :username
+      :password
+[ ] PUT /auth/reset                     -> ["ok", "email_sent"]
+      :email
+    
 Requests to endpoints listed further in this document implicitly require a
 valid authentication token, provided in the Authorization header like:
 
 Authorization: Bearer <token>
+    
+[ ] GET /api/v1/token                   -> ["ok", "token_valid"]
+[ ] GET /api/v1/token/all               -> ["ok", ["<token1>", "<token2>", ...]]
+[ ] DELETE /api/v1/auth                 -> ["ok", "logged_out"]
+[ ] DELETE /api/v1/auth/:token          -> ["ok", "token_deleted"]
+    
+[ ] GET /api/v1/note/:id                -> ["ok", %Note[...]]
+    # flag determines if external block references are provided
+      :references, default: true        ; [true, false]
 
-GET /api/v1/token                   -> {"ok", "token_valid"}
-GET /api/v1/token/all               -> {"ok", ["<token1>", "<token2>", ...]}
-DELETE /api/v1/auth                 -> {"ok", "logged_out"}
-DELETE /api/v1/auth/:token          -> {"ok", "token_deleted"}
-
-GET /api/v1/note/:id                -> {"ok", %Note{...}}
-  # flag determines if external block references are provided
-  :references, default: true        ; [true, false]
 # :id is used when updating an existing note
 # in that case, unmodified fields can be omitted
-PUT /api/v1/note                    -> {"ok", %Note{...}} 
-  :id (optional)
-  :title
-  :blocks [%Block{...}]             ; parsed list of blocks based on NOTEFISH language
-  :tags                             ; unique list of lowercase strings
-  :fields                           ; indexed map of string to string value
-  :archived, default: false         ; [true, false]
-DELETE /api/v1/note/:id             -> {"ok", "deleted"} 
-
-# %Note{} objects given are partials, body is truncated to maximum length
-GET /api/v1/note/list               -> {"ok", [%Note{...}, %Note{...}, ...]
-  :preview, default: long           ; [short, long]
-  :query, default: ""
-  :folder, default: ""
-  :tags, default: []                ; must have this tag
-  :fields, default: {}              ; must have this field, key => value
-  :author, default: <you>           ; [:any, <username>]
-  :sort, default: edited            ; [edited, created]
-  :archives, default: false         ; [true, false]
-
-GET /api/v1/note/block/:id          -> {"ok", %Block{"text" => "...", "refs" => [...], "children" => [...]}}
-
+[ ] PUT /api/v1/note                    -> ["ok", %Note[...]] 
+      :id (optional)
+      :title
+      :blocks [%Block[...]]             ; parsed list of blocks based on fishy language
+      :tags                             ; unique list of lowercase strings
+      :fields                           ; indexed map of string to string value
+      :archived, default: false         ; [true, false]
+[ ] DELETE /api/v1/note/:id             -> ["ok", "deleted"] 
+    
+# %Note[] objects given are partials, body is truncated to maximum length
+[ ] GET /api/v1/note/list               -> ["ok", [%Note[...], %Note[...], ...]
+      :preview, default: long           ; [short, long]
+      :query, default: ""
+      :folder, default: ""
+      :tags, default: []                ; must have this tag
+      :fields, default: []              ; must have this field, key => value
+      :author, default: <you>           ; [:any, <username>]
+      :sort, default: edited            ; [edited, created]
+      :archives, default: false         ; [true, false]
+    
+[ ] GET /api/v1/note/block/:id          -> ["ok", %Block["text" => "...", "refs" => [...], "children" => [...]]]
+    
 # Bulk operations, available when multiple Notes are selected
 # :archived, :folder, :tags and :fields are mutually exclusive
 # and :action determines if a property is added or removed.
-PUT /api/v1/note/bulk               -> {"ok", %{"rows_changed" => x}} 
-  :delete, default: false           ; [true, false]
-  :archived (optional)              ; [true, false]
-  :action (optional)                ; [add, remove]
-  :folder (optional)
-  :tags (optional)
-  :fields (optional)
-
+[ ] PUT /api/v1/note/bulk               -> ["ok", %["rows_changed" => x]] 
+      :delete, default: false           ; [true, false]
+      :archived (optional)              ; [true, false]
+      :action (optional)                ; [add, remove]
+      :folder (optional)
+      :tags (optional)
+      :fields (optional)
+    
 # Return all folders for current user
-GET /api/v1/folders                 -> {"ok", [%Folder{"name" => "some name", "children" => [...]}, ...]}
+[ ] GET /api/v1/folders                 -> ["ok", [%Folder["name" => "some name", "children" => [...]], ...]]
 # Get Notes in a given folder
-GET /api/v1/folders/:a/:b/:c        -> {"ok", [%Note{...}, %Note{...}, ...]}
+[ ] GET /api/v1/folders/:a/:b/:c        -> ["ok", [%Note[...], %Note[...], ...]]
 # Create folder :c in :b
-PUT /api/v1/folders/:a/:b/:c        -> {"ok", "created"}
+[ ] PUT /api/v1/folders/:a/:b/:c        -> ["ok", "created"]
 # Delete folder :c in :b
-DELETE /api/v1/folder/:a/:b/:c      -> {"ok", "deleted"}
-
+[ ] DELETE /api/v1/folder/:a/:b/:c      -> ["ok", "deleted"]
+    
 # Return all known tags for user
 # intended for auto completion
-GET /api/v1/tags                    -> {"ok", ["tag1, "tag2", ...]}
-DELETE /api/v1/tags/:tag            -> {"ok", "deleted"}
-
+[ ] GET /api/v1/tags                    -> ["ok", ["tag1, "tag2", ...]]
+[ ] DELETE /api/v1/tags/:tag            -> ["ok", "deleted"]
+    
 # Return all known field keys for user
 # intended for auto completion
-GET /api/v1/fields                  -> {"ok", ["key1, "key2", ...]}
-DELETE /api/v1/fields/:key          -> {"ok", "deleted"}
+[ ] GET /api/v1/fields                  -> ["ok", ["key1, "key2", ...]]
+[ ] DELETE /api/v1/fields/:key          -> ["ok", "deleted"]
