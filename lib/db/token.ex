@@ -6,7 +6,7 @@ defmodule Token do
   @primary_key false
 
   schema "auth_tokens" do
-    field :user_id, :integer
+    field :user_id, :string
     field :token
     field :device_name
 

@@ -2,11 +2,14 @@ defmodule User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key false
+
   schema "users" do
-    field :email
-    field :username
-    field :hashed_password
-    has_many :tokens, Token
+    field :id, :string
+    field :email, :string
+    field :username, :string
+    field :hashed_password, :string
+    has_many :tokens, Token, references: :id
 
     timestamps()
   end

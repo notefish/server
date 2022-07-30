@@ -23,7 +23,7 @@ defmodule Note do
   def changeset(note, params \\ %{}) do
     note
     |> cast(params, [:title, :preview, :fields, :access_public, :access_users, :archived, :hidden, :space_id, :folder_id])
-    |> validate_required([:title, :preview, :space_id, :folder_id])
+    |> validate_required([:preview, :space_id, :folder_id])
     |> unique_constraint(:id)
   end
 end

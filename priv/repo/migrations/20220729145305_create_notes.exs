@@ -26,15 +26,16 @@ defmodule Notefish.Repo.Migrations.CreateNotes do
         primary_key: true,
         default: fragment("string_pseudo_encrypt(nextval('nf_serial'))")
       add :space_id, references(:spaces, type: :text), null: false
+      # name includes parents e.g.
+      # a/b
+      # a/b/c
       add :name, :text, null: false
-      # null implies parent is the root folder
-      add :parent_id, references(:folders, type: :text) # nullable
 
       add :access_public, :boolean, default: false
       add :access_users, {:array, :text}
     end
 
-    create unique_index(:folders, [:space_id, :parent_id, :name])
+    create unique_index(:folders, [:space_id, :name])
     create index(:folders, :access_users, using: :gin) # gin for arrays
 
     create table(:notes, primary_key: false) do

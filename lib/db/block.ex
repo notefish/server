@@ -2,11 +2,13 @@ defmodule Block do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key false
+
   schema "blocks" do
     field :id, :string
     field :body, :string
-    field :tags, {:array, :text}
-    field :refs, {:array, :text}
+    field :tags, {:array, :string}
+    field :refs, {:array, :string}
 
     field :index, :integer
 

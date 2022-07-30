@@ -9,9 +9,9 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
 
 	# Resources:
 	# - https://wiki.postgresql.org/wiki/Pseudo_encrypt_constrained_to_an_arbitrary_range
-	# - https://stackoverflow.com/a/12590064 (modified)
+    # - https://stackoverflow.com/a/12590064 (modified)
     execute """
-    CREATE OR REPLACE FUNCTION pseudo_encrypt_24(VALUE int) returns int AS $$
+    CREATE OR REPLACE FUNCTION pseudo_encrypt_24(VALUE bigint) returns int AS $$
     DECLARE
     l1 int;
     l2 int;
@@ -33,7 +33,7 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
     $$ LANGUAGE plpgsql strict immutable;
     """
     execute """
-    CREATE OR REPLACE FUNCTION bounded_pseudo_encrypt(VALUE int) returns int AS $$
+    CREATE OR REPLACE FUNCTION bounded_pseudo_encrypt(VALUE bigint) returns int AS $$
     DECLARE
     max int:=10000000;
     BEGIN
@@ -49,7 +49,7 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
     CREATE OR REPLACE FUNCTION string_pseudo_encrypt(VALUE bigint) RETURNS text
         LANGUAGE plpgsql IMMUTABLE STRICT AS $$
     DECLARE
-     n bigint:=bounded_pseudo_encrypt(value, 10000000)::bigint * 3221;
+     n bigint:=bounded_pseudo_encrypt(value)::bigint * 3221;
      alphabet text:='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
      base int:=length(alphabet); 
      _n bigint:=abs(n);
@@ -65,6 +65,11 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
     """
 
 	execute "CREATE SEQUENCE IF NOT EXISTS nf_serial;"
+
+    #Enable support for GIN indexes on :text
+    #https://stackoverflow.com/a/65697417
+    execute "CREATE EXTENSION pg_trgm;"
+    execute "CREATE EXTENSION btree_gin;"
 
     create table(:users, primary_key: false) do
 	  add :id, :text, primary_key: true, default: fragment("string_pseudo_encrypt(nextval('nf_serial'))")
