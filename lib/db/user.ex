@@ -3,13 +3,16 @@ defmodule User do
   import Ecto.Changeset
 
   @primary_key false
-
+  
   schema "users" do
     field :id, :string
     field :email, :string
     field :username, :string
     field :hashed_password, :string
+
     has_many :tokens, Token, references: :id
+    has_many :spaces, Space, references: :id
+    has_many :notes, Note, references: :id
 
     timestamps()
   end

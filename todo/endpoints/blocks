@@ -44,10 +44,63 @@ Authorization: Bearer <token>
 [ ] PUT /api/v1/note                    -> ["ok", %Note[...]] 
       :id (optional)
       :title
-      :blocks [%Block[...]]             ; parsed list of blocks based on fishy language
-      :tags                             ; unique list of lowercase strings
+      :tags                             ; tags list in title
       :fields                           ; indexed map of string to string value
       :archived, default: false         ; [true, false]
+
+# :blocks must be present if :id is absent (new note)
+# if updating an existing note, :blocks will full replace all db blocks
+# :diff is preferred, since this minimizes calls to the database
+# the server will return a hash(body(b1) + "\n" + body(b2) + ...) so that the
+# client can validate the update
+      :blocks (optional)                ; parsed list of blocks based on fishy language
+      :diff (optional)
+
+# blocks format ; ranks are automatically assigned
+  [
+    %{"body" => "The content of this block #a #b #c [[Note Title]]",
+      "tags" => ["a", "b", "c"],
+      "refs" => %{"Note Title" => "some_note_id"}},
+    %{"body" => "The content of this block #a #b #c [[Note Title]]",
+      "tags" => ["a", "b", "c"],
+      "refs" => %{"Note Title" => "some_note_id"},
+      "children" =>
+        [
+          %{"body" => "Some child note"},
+          %{"body" => "Some child note},
+          ...
+        ]},
+    ...
+  ]
+
+# diff format
+  [
+    %{"op" => "delete",
+      "id" => "idXYZ"},
+    %{"op" => "insert",
+      "at"   => 102, # new block rank
+      "body" => "The content of this block #a #b #c [[Note Title]]",
+      "tags" => ["a", "b", "c"],
+      "refs" => %{"Note Title" => "some_note_id"}},
+    %{"op" => "amend",
+      # only changed fields needed
+      "id"     => "idXYZ",
+      "body"   => "The content of this block #a #b #c [[Note Title]]",
+      "parent" => "idXYZ"}
+  ]
+
+    %{"id" => "idXYZ",
+      "d" => ["delete"]},
+    # absent id implies new block
+    %{"d" => ["insert", "idXYZ"],
+      "body" => "The contents of the new block are as follows...",
+      "tags" => ["recomputed", "tag", "list"],
+      "refs" => %{"Some Note Title" => "note_id"}},
+    %{"id" => "id3",
+      "state" => "amended",
+      "children" => [%{}, %{}, ...]}
+  ]
+
 [ ] DELETE /api/v1/note/:id             -> ["ok", "deleted"] 
 
 # block is returned with its immediate children
@@ -55,38 +108,8 @@ Authorization: Bearer <token>
 # by the server
 [ ] GET /api/v1/block/:id               -> ["ok", %Block{}]
 
-# due to the block-based architecture, it is too expensive to perform a full
-# note update on every edit and insertion. as an alternative, the client can
-# use its information on what has/has not changed to do some patching over
-# the network. to this effort, each amendment method (ament, insert and delete)
-# sends over a hashlist to aid the server in keeping in-sync. this is simply
-# a list of all block body hashes for the note, in order of how they appear
-# in the client. if the server and client come out of sync, the server will 
-# request the client sends a full note update to bridge the gap.
-[ ] PUT /api/v1/block/amend
-      :block_id
-      :body                             ; new content
-      :tags
-      :refs
-      :hashlist
-# create new block at index specified. when appending to the note, clients 
-# should aim to leave a gap between the last index and the new index.
-# this means that a block can be inserted in-between existing blocks without
-# updating the indexes on those blocks.
-[ ] PUT /api/v1/block/insert
-      :index
-      :body
-      :tags
-      :refs
-      :children [%Block[...]]
-      :hashlist
-
-[ ] DELETE /api/v1/block/:id
-      :block_id
-      :hashlist
-
-# %Note[] objects given are partials, body is truncated to maximum length
-[ ] GET /api/v1/note/query              -> ["ok", [%Note[...], %Note[...], ...]
+# a note query can match on the note title or a note's block
+[ ] GET /api/v1/note/query              -> ["ok", [%Result{}, ...]]
       :preview, default: long           ; [short, long]
       :query, default: ""
       :folder, default: ""
@@ -95,7 +118,16 @@ Authorization: Bearer <token>
       :author, default: <you>           ; [:any, <username>]
       :sort, default: edited            ; [edited, created]
       :archives, default: false         ; [true, false]
-    
+ 
+RETURNS [
+          %{"type" => "note",
+            "note" => %{...note metadata}},
+          %{"type" => "block",
+            "note" => %{...containing note metadata},
+            "block" => %{...matching block}},
+          ...more results
+        ]
+
 [ ] GET /api/v1/note/block/:id          -> ["ok", %Block["text" => "...", "refs" => [...], "children" => [...]]]
     
 # Bulk operations, available when multiple Notes are selected

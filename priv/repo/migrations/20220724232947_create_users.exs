@@ -21,7 +21,7 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
     BEGIN
      l1:= (VALUE >> 12) & (4096-1);
      r1:= VALUE & (4096-1);
-     WHILE i < 3 LOOP
+     WHILE i < 6 LOOP
        l2 := r1;
        r2 := l1 # ((((1366 * r1 + 150889) % 714025) / 714025.0) * (4096-1))::int;
        l1 := l2;

@@ -1,17 +1,24 @@
-defmodule notefish.ApiRouter do
+defmodule Notefish.ApiRouter do
   use Plug.Router
-  import notefish.Helper
+  import Notefish.Helper
 
   # All further matches require authentication
-  plug(notefish.Auth.Plug)
+  plug(Notefish.Auth.Plug)
 
   plug(:match)
 
   @doc """
   Gets the content and metadata for a note.
 
+  Optional parameters:
+  
     :blocks (boolean) - Whether or not note blocks (content) is returned.
     :backlinks (boolean) - Whether or not backlinks for this note are returned.
+
+  Default values:
+
+    :blocks - true
+    :backlinks - false
   """
   get "/note/:id" do
     conn |> send_json(501, {:error, "not_implemented"})
@@ -28,7 +35,7 @@ defmodule notefish.ApiRouter do
   %Block{
     body: "...",
     tags: ["a", "b", ...], # optional
-    refs: ["a", "b", ...], # optional
+    refs: ["id1", "id2", ...], # optional
     children: [%Block{}, %Block{}, ...]}
 
   Optional parameters:
@@ -36,7 +43,7 @@ defmodule notefish.ApiRouter do
     :id - The id of the note to update.
     :folder (string) - The folder this note is in.
     :title (string) - The note title.
-    :tags (string[]) - A list of lowercase tag strings.
+    :tags (string[]) - A list of tag strings in the title.
     :fields ((string, string)[]) - A map of key => value fields.
     :archived (boolean) - Whether or not this note is archived.
   """

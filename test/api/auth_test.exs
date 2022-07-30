@@ -8,16 +8,22 @@ defmodule AuthTest do
   @username "john321"
   @password "password123"
 
-  # drop all
-  Notefish.Repo.delete_all(Token)
-  Notefish.Repo.delete_all(User)
+  Ecto.Adapters.SQL.Sandbox.mode(Notefish.Repo, :manual)
 
-  # test user
-  {:ok, _} = Notefish.Repo.insert(%User{
-    email: @email,
-    username: @username,
-    hashed_password: Bcrypt.Base.hash_password(@password, @salt)
-  })
+  setup do
+    # Explicitly get a connection before each test
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Notefish.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Notefish.Repo, {:shared, self()})
+
+    # test user
+    {:ok, _} = Notefish.Repo.insert(%User{
+      email: @email,
+      username: @username,
+      hashed_password: Bcrypt.Base.hash_password(@password, @salt)
+    })
+    
+    :ok
+  end
 
   test "/: (verify) fails with no token" do
     conn =
@@ -51,7 +57,6 @@ defmodule AuthTest do
     parsed = Jason.decode!(conn.resp_body)
     ["error", "missing_keys", reason] = parsed
   end
-
 
   test "/register: fails for duplicate email" do
     conn =

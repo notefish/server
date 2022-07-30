@@ -11,6 +11,7 @@ defmodule Notefish.Repo.Migrations.CreateNotes do
       add :id, :text,
         primary_key: true,
         default: fragment("string_pseudo_encrypt(nextval('nf_serial'))")
+      add :name, :text, null: false
       add :owner_id, references(:users, type: :text), null: false
       # publicly accessible
       add :access_public, :boolean, default: false
@@ -48,6 +49,8 @@ defmodule Notefish.Repo.Migrations.CreateNotes do
       # preview is generated with first few blocks
       # contains no newlines
       add :preview, :text, null: false
+
+      add :tags, {:array, :text}, default: []
       add :fields, :map, default: %{}
 
       # publicly accessible
@@ -78,7 +81,7 @@ defmodule Notefish.Repo.Migrations.CreateNotes do
       # null is root block
       add :parent_id, :text
       # index is under the parent
-      add :index, :integer
+      add :rank, :integer
 
       add :space_id, references(:spaces, type: :text), null: false
     end
@@ -87,6 +90,6 @@ defmodule Notefish.Repo.Migrations.CreateNotes do
     create index(:blocks, :note_id)
     create index(:blocks, :tags, using: :gin)
     create index(:blocks, :refs, using: :gin)
-    create unique_index(:blocks, [:note_id, :parent_id, :index])
+    create unique_index(:blocks, [:note_id, :parent_id, :rank])
   end
 end
