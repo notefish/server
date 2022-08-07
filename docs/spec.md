@@ -91,16 +91,16 @@ The title of this note is 'Some #note title'
 Let the dollar sign represent a query. The results are shown on each line
 after. Consider the following queries...
 
-$ #note 'This is a'
--> (by metadata) 'Some note title' "This is some block of text..."
--> (by content ) 'Some note title' "This is a #note #block which uses #tags..."
+$ `#note 'This is a'`
+- (by metadata) 'Some note title' "This is some block of text..."
+- (by content) 'Some note title' "This is a #note #block which uses #tags..."
 
 The user has the option to merge matches from the same note, but by default
 these are shown separately.
 
-$ [[A Note Reference]] 
--> (by content) 'Some note title' "This is a #note #block which uses #tags..."
--> (by content) 'Some note title' "This is another block which uses [[A Note..."
+$ `[[A Note Reference]]`
+- (by content) 'Some note title' "This is a #note #block which uses #tags..."
+- (by content) 'Some note title' "This is another block which uses [[A Note..."
 
 The effect of a reference like [[A Note Reference]] is a referential link. If a
 note called 'A Note Reference' exists, it is now linked to 'Some note title'.
@@ -115,39 +115,41 @@ space. Here are some examples.
 
 Note or block must have these tags.
 
-$ #must #include #these #tags
+$ `#must #include #these #tags`
 
 Note field must have this value.
 
-$ 'Due Date'='15/08/22'
+$ `'Due Date'='15/08/22'`
 
 Note must have this author (notes may have multiple authors.)
 
-$ @john.doe
+$ `@john.doe`
 
 Prioritize notes which contain this text (keyword match.)
 
-$ list of keywords
+$ `list of keywords`
 
 Return notes which are in the archive.
 
-$ archived: yes
+$ `archived: yes`
 
 Return notes from this place (space or folder.)
 
-$ in: My Space
-$ in: Notefish
-$ in: A/B/C
+$ `in: My Space`
+
+$ `in: Notefish`
+
+$ `in: A/B/C`
 
 Sort search results in this way.
 
-$ some keyword list, sort: edited
+$ `some keyword list, sort: edited`
 
-$ some keyword list, sort: created, order: ascending 
+$ `some keyword list, sort: created, order: ascending` 
 
 The default note view. This is displayed whenever the user opens the app.
 
-$ in: My Space sort: edited
+$ `in: My Space sort: edited`
 
 The searchbar also has a view option for search results. This is not included
 in the search query, but it is present as a dropdown somewhere near the bar.
@@ -185,8 +187,8 @@ clicking it in general, the client will open the note editor for that note.
 The note editor has the appearance of a rich-formatting text editor. Text can
 be put into bold, italics or code blocks. The font family and size can be
 changed, but these are not special formatting on the note. The note is always
-stored in plaintext. Bold is represented as <b>bold</b>, italics as
-<i>italics</i> and codeblocks wrapped like `codeblocks`. The font settings are
+stored in plaintext. Bold is represented as `<b>`bold`</b>`, italics as
+`<i>`italics`</i>` and codeblocks wrapped like ``codeblocks``. The font settings are
 just a preference, and change your font settings globally for every note.
 There are two editing modes for the note editor - rich and plaintext. The rich
 editing mode converts dashes and astrisks to bullet points. [[Note References]]
