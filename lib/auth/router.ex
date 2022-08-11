@@ -73,7 +73,7 @@ defmodule Notefish.Auth.Router do
                |> Map.put("hashed_password", hashed_password)
       user = User.changeset(%User{}, params)
 
-      case Notefish.Repo.insert(user) do
+      case Notefish.Repo.insert(user, returning: [:id]) do
         {:ok, user} ->
           # generate a token
           device_name = Map.get(conn.body_params, "device_name")

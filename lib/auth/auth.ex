@@ -44,7 +44,8 @@ defmodule Notefish.Auth do
       select: t
     with t = %Token{} <- Notefish.Repo.one(query) do
       now = NaiveDateTime.local_now()
-      if t.expires_at > now do
+      # expires_at is in the future (:gt now)
+      if NaiveDateTime.compare(t.expires_at, now) == :gt do
         {:ok, t.user_id}
       else
         {:error, :token_expired}

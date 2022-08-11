@@ -85,7 +85,7 @@ defmodule Notefish.Repo.Migrations.CreateUsers do
     create unique_index(:users, :username)
 
     create table(:auth_tokens, primary_key: false) do
-      add :user_id, references(:users, type: :text)
+      add :user_id, references(:users, type: :text), null: false
       add :token, :text, null: false
       add :device_name, :text, null: false
 

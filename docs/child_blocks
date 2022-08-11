@@ -1,0 +1,122 @@
+BLOCK CHILDREN
+
+The current design for blocks and block children is quite convoluted. 
+
+* Notes do not store note content.
+* Blocks store note content, where a block is a double-newline separated
+  segment of note text.
+* A child block is an indented block which follows an existing note block.
+
+Which is implemented as follows.
+
+* Each block has a separate row on the `blocks` table in the database.
+* Block children store a reference to their parent block id.
+* This mechanism would not preserve order. So we introduce a `rank` attribute
+  which informs the visual ordering of the note's blocks. Adjacent blocks are
+  given a rank-margin, so that blocks can be inserted while only inserting a
+  single row. In certain edge cases, this requires a 're-rank' of all the blocks
+  in the table.
+
+Stepping back a bit, the `rank` attribute seems like it may be error-prone.
+A note's contents effectively must be re-sorted on every fetch (which is
+a redundant operation, as the order is well known on persistence.)
+
+USE CASE
+
+It may help to consider the purpose for this implementation. Consider two
+notes, A and B. Each block is labelled with a number - this is only for
+presentation purposes.
+
+===== Note A
+
+This is a block in Note A. This is the same block. (1)
+
+This is another block in Note A. (2)
+- This is a child block. (3)
+- This is another child block, which references [[Note B]]. (4)
+    - This is a child block, another level deep. (5)
+    - Another child block. (6)
+
+This is another block in Note A. It also references [[Note B]]. (7)
+
+===== END
+
+===== Note B
+
+This is Note B.
+
+===== END
+
+Notefish should show the user 'backlinks', which are links to other notes that
+reference the current note. For example, if you were editing Note B, it might
+look something like this.
+
+===== Editing: Note B
+
+[References]
+
+* This is another child block, which references [[Note B]]. (4) -> Note A
+    - This is a child block, another level deep. (5)
+    - Another child block. (6)
+* This is another block in Note A. It also references [[Note B]]. (7) -> Note A
+
+This is Note B.
+
+===== END
+
+Therefore blocks need to be accessible in a few cases.
+
+1. When accessing the Note, to edit or otherwise. Order is necessary.
+2. When accessing a Note that references another Note. Order is necessary only
+   on child blocks.
+3. When previewing a Note's text. Order is necessary (to use the first block.) 
+
+Question: do we need to split the note's text into blocks to achieve the same
+effect? The same effect could be achieved through a single text blob on the
+note, along with a separate table of references. The reference would provide
+information on the location of the reference e.g. character range of the
+referencing 'block' (which would be a client-side decision.)
+
+Comparison to current solution:
+
+Advantage - The design is simpler with reduced capacity for error. Order of the
+note's contents is tightly coupled (as the text is not separated out.) 
+Advantage - When accessing a referencing Note, it is a constant operation
+regardless of whether or not the block has children. No extra work is needed. 
+Advantage - Looking up a 'reference' row is probably faster than looking up
+references across all blocks, since the latter will require a GIN index.
+
+Disadvantage - The client must keep track of what references have been moved or
+deleted upon save. On text edit early in the document, every reference row will
+need an update because the character range will have changed. References must
+be deleted by the client or they will be left in the database unaccounted for.
+Disadvantage - Accessing a reference block requires accessing the full Note
+text, then taking the correct substring based on the reference metadata. This
+is clearly more performance intensive on the server than just returning the
+result of the database query on the blocks table. This could be offloaded to
+the client, but this will make opening a document that has been referenced
+many times quite slow. 
+
+The main disadvantage I see is that each reference must be updated on save.
+This is too many row updates to justify the simplified design. Plus it is still
+involved to try to reduce reference updates through diff'ing, so it's not that
+simple anyway.
+
+Question: is the concept of a child block necessary? The initial justification
+was to provide the ability to fetch the immediate children of a block with
+ease, so that bullet-points following a referencing block are displayed. But
+this effect can be generalised - why not return the next N subsequent blocks?
+This can be done based on the size of the current block i.e. if there is too
+much content to display in the referencing block anyway, just return the block.
+
+Advantage - Design is simplified, with no parent block id. Indentation becomes
+a purely visual feature, with no effect on a block's metadata.
+Advantage - Client note persistence is simplified, since there is no need to
+assign child blocks and manage existing child blocks.
+
+Disadvantage - The design still requires ranks, which feels error-prone. Whether
+or not it *is* error-prone is something that would have to be tested. However,
+performance is likely to be more than sufficient. A note is likely to have
+at most 100 blocks, so sorting will be fast. 
+
+Given this discussion, I will try to implement blocks without children. 

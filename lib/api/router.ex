@@ -1,11 +1,16 @@
+# make Api.Router to be consistent
 defmodule Notefish.ApiRouter do
   use Plug.Router
   import Notefish.Helper
+
+  import Ecto.Query
 
   # All further matches require authentication
   plug(Notefish.Auth.Plug)
 
   plug(:match)
+
+  plug(:dispatch)
 
   @doc """
   Gets the content and metadata for a note.
@@ -21,7 +26,32 @@ defmodule Notefish.ApiRouter do
     :backlinks - false
   """
   get "/note/:id" do
-    conn |> send_json(501, {:error, "not_implemented"})
+    # boolean parameters
+    fetch_blocks    = parse_bool_param(conn.params, "blocks", true)
+    fetch_backlinks = parse_bool_param(conn.params, "backlinks", true)
+
+    preload =
+      case fetch_blocks do
+        true  -> [:space, :folder, :blocks]
+        false -> [:space, :folder]
+      end
+
+    query = from n in Note,
+      where: n.id == ^conn.params["id"],
+      select: n,
+      preload: ^preload
+    note = Notefish.Repo.one(query)
+
+    note =
+      case fetch_blocks do
+        true  -> note
+        false -> %{note | blocks: nil}
+      end
+
+    case note do
+      %{} -> send_json(conn, 200, {:ok, note})
+      nil -> send_json(conn, 404, {:error, "not_found"})
+    end
   end
 
   @doc """
@@ -250,6 +280,6 @@ defmodule Notefish.ApiRouter do
   end
 
   match _ do 
-    send_resp(conn, 500, "unknown method")
+    conn |> send_json(501, {:error, "unknown_method"})
   end
 end

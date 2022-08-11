@@ -6,7 +6,7 @@ defmodule AuthTest do
 
   @email "john.doe@gmail.com"
   @username "john321"
-  @password "password123"
+  @password "123"
 
   Ecto.Adapters.SQL.Sandbox.mode(Notefish.Repo, :manual)
 

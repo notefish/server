@@ -63,13 +63,7 @@ Authorization: Bearer <token>
       "refs" => %{"Note Title" => "some_note_id"}},
     %{"body" => "The content of this block #a #b #c [[Note Title]]",
       "tags" => ["a", "b", "c"],
-      "refs" => %{"Note Title" => "some_note_id"},
-      "children" =>
-        [
-          %{"body" => "Some child note"},
-          %{"body" => "Some child note},
-          ...
-        ]},
+      "refs" => %{"Note Title" => "some_note_id"}},
     ...
   ]
 
@@ -85,32 +79,18 @@ Authorization: Bearer <token>
     %{"op" => "amend",
       # only changed fields needed
       "id"     => "idXYZ",
-      "body"   => "The content of this block #a #b #c [[Note Title]]",
-      "parent" => "idXYZ"}
-  ]
-
-    %{"id" => "idXYZ",
-      "d" => ["delete"]},
-    # absent id implies new block
-    %{"d" => ["insert", "idXYZ"],
-      "body" => "The contents of the new block are as follows...",
-      "tags" => ["recomputed", "tag", "list"],
-      "refs" => %{"Some Note Title" => "note_id"}},
-    %{"id" => "id3",
-      "state" => "amended",
-      "children" => [%{}, %{}, ...]}
+      "body"   => "The content of this block #a #b #c [[Note Title]]"}
   ]
 
 [ ] DELETE /api/v1/note/:id             -> ["ok", "deleted"] 
 
-# block is returned with its immediate children
 # this endpoint's functionality is equivalent to when backlinks are fetched
 # by the server
 [ ] GET /api/v1/block/:id               -> ["ok", %Block{}]
+      :adjacent, default: false         ; fetch N adjacent blocks
 
 # a note query can match on the note title or a note's block
 [ ] GET /api/v1/note/query              -> ["ok", [%Result{}, ...]]
-      :preview, default: long           ; [short, long]
       :query, default: ""
       :folder, default: ""
       :tags, default: []                ; must have this tag

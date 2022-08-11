@@ -4,10 +4,25 @@ defmodule Note do
 
   @primary_key false
 
+  @derive {Jason.Encoder, only: [
+    :id,
+    :space_id,
+    :title,
+    :tags,
+    :fields,
+    :access_public,
+    :access_users,
+    :archived,
+    :hidden,
+    # ensure to preload
+    :space,
+    :folder,
+    :blocks
+  ]}
+
   schema "notes" do
     field :id, :string
     field :title, :string
-    field :preview, :string
 
     field :tags, {:array, :string}
     field :fields, :map
@@ -26,10 +41,10 @@ defmodule Note do
 
   def changeset(note, params \\ %{}) do
     note
-    |> cast(params, [:title, :preview, :tags, :fields, :access_public, :access_users, :archived, :hidden, :space_id, :folder_id])
+    |> cast(params, [:title, :tags, :fields, :access_public, :access_users, :archived, :hidden, :space_id, :folder_id])
     |> cast_assoc(:space)
     |> cast_assoc(:folder)
-    |> validate_required([:preview, :space_id])
+    |> validate_required([:space_id])
     |> unique_constraint(:id)
     |> foreign_key_constraint(:space_id)
     |> foreign_key_constraint(:folder_id)

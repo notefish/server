@@ -4,6 +4,14 @@ defmodule Space do
 
   @primary_key false
 
+  @derive {Jason.Encoder, only: [
+    :id,
+    :name,
+    :access_public,
+    :access_users,
+    :owner_id
+  ]}
+
   schema "spaces" do
     field :id, :string
     field :name, :string
@@ -17,7 +25,7 @@ defmodule Space do
     space
     |> cast(params, [:id, :owner_id, :name, :access_public, :access_users])
     |> cast_assoc(:owner)
-    |> validate_required([:id, :owner_id, :name])
+    |> validate_required([:owner_id, :name])
     |> unique_constraint(:id)
   end
 end

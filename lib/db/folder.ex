@@ -4,6 +4,15 @@ defmodule Folder do
 
   @primary_key false
 
+  @derive {Jason.Encoder, only: [
+    :id,
+    :name,
+    :access_public,
+    :access_users,
+    :space_id,
+    :parent_id
+  ]}
+
   schema "folders" do
     field :id, :string
     field :name, :string
